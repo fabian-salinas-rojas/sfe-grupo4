@@ -58,7 +58,7 @@ Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubie
 | USD y tildes/ñ | F001‑7 | ACEPTADO |
 | Exonerado / inafecto | F001‑10, F001‑11 | ACEPTADO (F001‑8/9 rechazados por `2992` antes de corregir `cbc:Percent`) |
 | Rechazo 2xxx no se reintenta | F001‑8, F001‑9 | RECHAZADO, `intentos=1` |
-| Fault Client no se reintenta | F001‑1, F001‑2 | EXCEPCION (`Client.0160`) |
+| Fault Client no se reintenta | F001-1, F001-2 | EXCEPCION (`Client.0160`); 12-13 intentos previos a la corrección del hallazgo 3, hoy cola COMPLETADO |
 | Contingencia (RF‑05) | F001‑4/5/6 | PENDIENTE sin worker → ACEPTADO al reiniciarlo |
 
 

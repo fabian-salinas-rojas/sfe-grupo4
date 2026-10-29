@@ -166,7 +166,7 @@ Que un XML sea válido contra el XSD **no** garantiza que SUNAT lo acepte (aplic
 | F001‑10, F001‑11 | Exonerado e inafecto tras corregir el XML | ACEPTADO, CDR 0 |
 | FD01‑1 | Nota de débito sobre F001‑3 | ACEPTADO, CDR 0 |
 | FC01‑2 | NC que referencia F001‑999 (inexistente) | ACEPTADO (BETA no valida la existencia del referenciado) |
-| F001‑1, F001‑2 | ZIP con carpeta `dummy` | EXCEPCION (`Client.0160`), no se reintentan |
+| F001‑1, F001‑2 | ZIP con carpeta `dummy` | EXCEPCION (`Client.0160`); acumularon 12-13 intentos antes de corregir el hallazgo 3 y hoy la cola está cerrada, sin reintentos |
 | F001‑4/5/6 | Contingencia (RF‑05): worker detenido | PENDIENTE → ACEPTADO solos al reiniciar el worker |
 
 ### Hallazgos
