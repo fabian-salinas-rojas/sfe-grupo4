@@ -30,11 +30,11 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 | Pieza | Estado | Evidencia |
 |---|---|---|
-| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso) | ✅ **51 pruebas JUnit pasan** | `docs/VERIFICACION.md` |
+| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso) | ✅ **53 pruebas JUnit pasan** (+ 4 de integración = 57) | `docs/VERIFICACION.md` |
 | Facturas, boletas, NC y ND contra los **XSD oficiales UBL 2.1** + firma verificada | ✅ | `EmisionPipelineTest`, ejemplos en `docs/ejemplos/` |
 | SQL del outbox, lease, fencing, correlativo sin saltos, inmutabilidad | ✅ **PostgreSQL 16.15 real**, sesiones concurrentes | `docs/VERIFICACION.md` |
 | Enmascaramiento de secretos en logs | ✅ **Logback real** + `LogMaskerTest` | `docs/VERIFICACION.md` |
-| RNF-01: 50 emisiones concurrentes (XML+firma+ZIP) | ✅ p95 ≈ 80–440 ms, máx. < 0,5 s medidos en **1 vCPU** (límite 1,2 s) | `RendimientoTest` |
+| RNF-01: 50 emisiones concurrentes (XML+firma+ZIP) | ✅ p95 = 90 ms (16 CPU, local) y 33 ms (4 CPU, CI); máx. < 0,1 s (límite 1,2 s) | `RendimientoTest` |
 | `sfe-persistence` / `sfe-api` / `sfe-worker` (código Spring) | ✅ **Compila y se ejecuta** en Docker Compose (2 api + 2 worker + PostgreSQL + Nginx): emisión 202, outbox, worker y CDR reales | Salidas de `docker compose` y consultas SQL del 2026‑10‑29 |
 | JAXB | ✅ Runtime `jakarta` 4.x (Spring Boot 3) ejercitado: los XML generados por la API fueron aceptados por SUNAT BETA | Comprobantes ACEPTADOS en §8 |
 | Versiones de Spring Boot 3.5.6 / WSS4J 3.0.4 | ✅ Resuelven y compilan (`mvn -B -q -pl sfe-worker -am -DskipTests compile` sin errores) | `pom.xml` |
