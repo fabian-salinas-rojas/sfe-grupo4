@@ -1,6 +1,6 @@
 # Trazabilidad: requisito (APF1/APF2/Stack/Manual) → código → prueba
 
-Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubierto y probado en el sandbox; "⚠️" = escrito pero no ejecutado; "❌" = fuera de este incremento.
+Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubierto y probado (local, CI y SUNAT BETA); "⚠️" = escrito pero no ejecutado; "❌" = fuera de este incremento.
 
 ## Requisitos funcionales (APF1)
 
