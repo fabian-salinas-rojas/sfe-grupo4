@@ -175,6 +175,7 @@ Que un XML sea válido contra el XSD **no** garantiza que SUNAT lo acepte (aplic
 2. **ZIP**: BETA exige el ZIP sin carpeta `dummy`, contrario a la lectura literal del manual 1.3.
 3. **Fault no reconocido**: Spring‑WS no trataba esta respuesta como Fault y el worker intentaba decodificarla como CDR; ahora `SunatSoapClient.invocar` la clasifica y queda `EXCEPCION`/`RECHAZADO` según el código.
 4. **Codificación**: al probar con PowerShell 5.1 hay que enviar el cuerpo como bytes UTF‑8 con `charset=utf-8`; de lo contrario la API responde 400 con tildes/ñ.
+5. **RUC ficticios**: 20608945123 (emisor) y 20512345678 (cliente) tienen 11 dígitos y prefijo 20, pero su dígito verificador (módulo 11) no es válido; la Consulta RUC de SUNAT los rechaza como inválidos, por lo que no corresponden a ningún contribuyente. BETA no valida el dígito verificador y los acepta; producción sí los rechazaría.
 
 ## 9. Alcance actual y siguientes incrementos
 
