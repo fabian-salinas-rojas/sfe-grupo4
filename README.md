@@ -5,7 +5,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 > **Léelo primero — qué está verificado y qué no** (sección 2). El núcleo (XML, firma, ZIP, CDR, reintentos, casos de uso) y el SQL
 > están probados con pruebas automáticas; el stack completo (api ×2, worker ×2, PostgreSQL, Nginx) se ejecutó con Docker Compose y se
-> **validó contra SUNAT BETA** (factura, boleta, notas de crédito y débito; ver §2 y §8). Siguen sin probarse `FlujoEmisionIT` y producción.
+> **validó contra SUNAT BETA** (factura, boleta, notas de crédito y débito; ver §2 y §8). Sigue sin probarse producción.
 
 ## 1. Módulos
 
