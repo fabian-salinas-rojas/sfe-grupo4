@@ -156,4 +156,21 @@ class FlujoEmisionIT {
         ResponseEntity<Map> igual = rest.exchange("/api/v1/comprobantes/" + id, HttpMethod.GET, conLlave(null, API_KEY), Map.class);
         assertThat(igual.getBody().get("estado")).isEqualTo("ACEPTADO");
     }
-}
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void reporteDeContingenciaListaPendientesConIntentosYError() {
+        ResponseEntity<Map> e = rest.exchange("/api/v1/comprobantes", HttpMethod.POST, conLlave(factura("VENTA-RF10"), API_KEY), Map.class);
+        String id = (String) e.getBody().get("id");
+        Ports.EnvioPendiente mio = outbox.reclamar(50, Duration.ofSeconds(30), "it-rf10", Instant.now()).stream()
+                .filter(p -> p.comprobanteId().toString().equals(id)).findFirst().orElseThrow();
+        outbox.registrarResultado(mio, new ResultadoEnvio.Reintentar("timeout"), Instant.now().plusSeconds(600), Instant.now());
+
+        ResponseEntity<List> r = rest.exchange("/api/v1/contingencia", HttpMethod.GET, conLlave(null, API_KEY), List.class);
+        assertThat(r.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Map<String, Object> item = ((List<Map<String, Object>>) r.getBody()).stream()
+                .filter(m -> id.equals(m.get("comprobanteId"))).findFirst().orElseThrow();
+        assertThat(item.get("estado")).isEqualTo("EN_CONTINGENCIA");
+        assertThat(((Number) item.get("intentos")).intValue()).isEqualTo(1);
+        assertThat(item.get("ultimoError")).isNotNull();
+    }}

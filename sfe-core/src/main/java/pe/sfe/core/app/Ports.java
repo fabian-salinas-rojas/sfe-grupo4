@@ -81,4 +81,14 @@ public final class Ports {
         /** Persiste el desenlace: estado del comprobante, CDR, outbox (completado o reprogramado) y bitacora. */
         void registrarResultado(EnvioPendiente envio, ResultadoEnvio resultado, Instant proximoIntento, Instant ahora);
     }
-}
+
+    public record ItemContingencia(
+            UUID comprobanteId, String numero, EstadoComprobante estado, String estadoEnvio, int intentos,
+            Instant ultimoIntento, Instant proximoIntento, String ultimoError,
+            LocalDate plazoLimite, boolean plazoVencido) {
+    }
+
+    /** RF-10: comprobantes en cola (PENDIENTE / EN_CONTINGENCIA) de la caja autenticada. */
+    public interface Contingencia {
+        List<ItemContingencia> pendientes(long posId);
+    }}

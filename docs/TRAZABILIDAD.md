@@ -15,7 +15,7 @@ Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubie
 | RF-07 | Envío por correo | — | — | ❌ |
 | RF-08 | Autenticación BETA `[RUC]MODDATOS` | `SunatCredentials.beta` | `DominioTest.cp_auth_08…` (credencial) · login real en BETA (`20608945123MODDATOS`) | ✅ |
 | RF-09 | Notas de crédito/débito (Cat. 09/10, motivo, referencia) | `ReglasNegocio.validarNota`, `UblXmlBuilder` | `facturaBoletaNotas…`, `DominioTest.rn03…` | ✅ |
-| RF-10 | Reporte de contingencia | métricas `sfe.outbox.*` | — | ❌ (parcial) |
+| RF-10 | Reporte de contingencia | `GET /api/v1/contingencia`, `ContingenciaController`, `JdbcContingencia` | `FlujoEmisionIT` · prueba en vivo: F001-16 PENDIENTE (workers detenidos) → ACEPTADO al reiniciarlos | ✅ |
 
 ## Reglas de negocio
 

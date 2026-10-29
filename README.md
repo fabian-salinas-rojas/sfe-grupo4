@@ -30,7 +30,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 | Pieza | Estado | Evidencia |
 |---|---|---|
-| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso) | ✅ **53 pruebas JUnit pasan** (+ 4 de integración = 57) | `docs/VERIFICACION.md` |
+| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso) | ✅ **53 pruebas JUnit pasan** (+ 5 de integración = 58) | `docs/VERIFICACION.md` |
 | Facturas, boletas, NC y ND contra los **XSD oficiales UBL 2.1** + firma verificada | ✅ | `EmisionPipelineTest`, ejemplos en `docs/ejemplos/` |
 | SQL del outbox, lease, fencing, correlativo sin saltos, inmutabilidad | ✅ **PostgreSQL 16.15 real**, sesiones concurrentes | `docs/VERIFICACION.md` |
 | Enmascaramiento de secretos en logs | ✅ **Logback real** + `LogMaskerTest` | `docs/VERIFICACION.md` |
@@ -39,7 +39,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 | JAXB | ✅ Runtime `jakarta` 4.x (Spring Boot 3) ejercitado: los XML generados por la API fueron aceptados por SUNAT BETA | Comprobantes ACEPTADOS en §8 |
 | Versiones de Spring Boot 3.5.6 / WSS4J 3.0.4 | ✅ Resuelven y compilan (`mvn -B -q -pl sfe-worker -am -DskipTests compile` sin errores) | `pom.xml` |
 | **SUNAT BETA** (`sendBill` real, CDR real) | ✅ **Probado** (2026‑10‑29): factura, boleta, NC y ND aceptadas con CDR 0; USD, tildes/ñ, exonerado e inafecto; rechazo real 2992 clasificado sin reintentos; contingencia sin worker | CP‑SOAP‑03; ver §8 |
-| `FlujoEmisionIT` (Testcontainers) | ✅ 4/4 con PostgreSQL 16 real (Testcontainers). En Docker Desktop 29 hace falta `~/.docker-java.properties` con `api.version=1.44` | `mvn -B verify` |
+| `FlujoEmisionIT` (Testcontainers) | ✅ 5/5 con PostgreSQL 16 real (Testcontainers). En Docker Desktop 29 hace falta `~/.docker-java.properties` con `api.version=1.44` | `mvn -B verify` |
 | Producción (Clave SOL, certificado real, getStatusCdr) | ❌ No probado | — |
 
 **Primer comando en tu máquina:** `mvn -B verify` (necesita Docker para `FlujoEmisionIT`; con Docker Desktop 29 crea antes `~/.docker-java.properties` con `api.version=1.44`).
@@ -179,8 +179,8 @@ Que un XML sea válido contra el XSD **no** garantiza que SUNAT lo acepte (aplic
 
 ## 9. Alcance actual y siguientes incrementos
 
-Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, idempotencia.
-**No incluido** (declarado, no escondido): RF‑06 (PDF + QR), RF‑07 (correo al cliente), RF‑10 (reporte de contingencia; hoy solo las métricas `sfe.outbox.*`), resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
+Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, reporte de contingencia (`GET /api/v1/contingencia`, RF-10), idempotencia.
+**No incluido** (declarado, no escondido): RF‑06 (PDF + QR), RF‑07 (correo al cliente), resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
 el XML `SummaryDocuments`/`VoidedDocuments`, que usa XSD de SUNAT distintos a los de OASIS), `getStatusCdr` (solo producción), pago a crédito,
 ISC/IVAP/gratuitas/descuentos globales/detracción/retención, un certificado por emisor, alta de POS/emisores y consola (JWT), verificación de
 **autenticidad** de la firma de la CDR (hoy solo integridad: falta fijar el certificado de SUNAT), alertas sobre `sfe.comprobantes.plazo_vencido`.
