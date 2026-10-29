@@ -8,4 +8,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '21', cache: maven }
       # Docker ya viene en ubuntu-latest: lo usan las pruebas de integracion (Testcontainers + PostgreSQL 16).
+      # El Docker del runner exige API >= 1.40; Testcontainers 1.21.3 usa 1.32 por defecto.
+      - name: Docker API para Testcontainers
+        run: echo "api.version=1.44" > ~/.docker-java.properties
       - run: mvn -B verify
