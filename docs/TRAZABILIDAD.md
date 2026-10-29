@@ -35,7 +35,7 @@ Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubie
 | ID | Requisito | Cómo | Evidencia |
 |---|---|---|---|
 | RNF-01 | XML+firma+ensamble ≤ 1,2 s con 50 concurrentes | pipeline puro, `JAXBContext`/`Schema` compartidos | `RendimientoTest` (p95 80–440 ms en 1 vCPU) ✅ |
-| RNF-02 | Clave SOL y llave privada cifradas AES‑256; TLS ≥ 1.2 | `AesGcmCipher` (AES‑256‑GCM + AAD), PKCS#12 AES‑256‑CBC/PBKDF2, `jdk.tls.client.protocols` | `DominioTest.aesGcm…`; `openssl pkcs12 -info` ✅ · TLS real ⚠️ |
+| RNF-02 | Clave SOL y llave privada cifradas AES‑256; TLS ≥ 1.2 | `AesGcmCipher` (AES‑256‑GCM + AAD), PKCS#12 AES‑256‑CBC/PBKDF2, `jdk.tls.client.protocols` | `DominioTest.aesGcm…`; `openssl pkcs12 -info` ✅ · TLS real ✅ (HTTPS contra SUNAT BETA) |
 | RNF-03 | Cola sigue aceptando; tras reinicio retoma ≤ 60 s sin perder nada | outbox transaccional, lease 30 s + sondeo 2 s ≈ 32 s | SQL real (lease/fencing) ✅ |
 | RNF-04 | Cumplir validaciones del Anexo I/VIII | XSD oficial antes de firmar | `EmisionPipelineTest` ✅ (el XSD no cubre todas las reglas de negocio de SUNAT) |
 | RNF-05 | BETA ↔ producción solo por configuración | `emisor.entorno` + URLs en propiedades | ⚠️ sin ejecutar |
