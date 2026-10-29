@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+spring:
+  application.name: sfe-api
+  threads.virtual.enabled: true            # Java 21: un hilo virtual por peticion
+  lifecycle.timeout-per-shutdown-phase: 30s
+  datasource:
+    url: ${SFE_DB_URL:jdbc:postgresql://localhost:5432/sfe}
+    username: ${SFE_DB_USER:sfe}
+    password: ${SFE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 30                # la emision retiene una conexion mientras genera y firma el XML
+      connection-timeout: 5000
+      keepalive-time: 30000
+      max-lifetime: 600000
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: none               # el esquema lo gobierna Flyway, no Hibernate
+  flyway:
+    enabled: true                          # solo sfe-api migra; sfe-worker no
+    locations: classpath:db/migration
+  mvc.problemdetails.enabled: true
+  jackson.deserialization.fail-on-unknown-properties: true
+  servlet.multipart.enabled: false
+
+management:
+  server.port: 8081                        # actuator en otro puerto: NO publicar al exterior
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.probes.enabled: true
+
+sfe:
+  security.master-key: ${SFE_MASTER_KEY}   # Base64 de 32 bytes (AES-256). Obligatoria.
+  signing:
+    keystore-path: ${SFE_KEYSTORE_PATH}
+    keystore-password: ${SFE_KEYSTORE_PASSWORD}
+    algorithm: SHA256                      # SHA256 | SHA1: confirmar contra la guia vigente / BETA
+    require-ruc-in-ou: true
+  zip.dummy-folder: false                  # BETA exige ZIP sin carpeta dummy (con ella responde Client.0160)
+  emision.plazo-envio-dias: 3              # RN-06

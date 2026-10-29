@@ -1,0 +1,49 @@
+# Desarrollo/BETA local:  cd deploy && cp .env.example .env && ./gen-dev-cert.sh && docker compose up --build
+# Dos instancias de sfe-api tras Nginx y dos de sfe-worker (SKIP LOCKED las coordina). Puerto publico: 8080 (solo el proxy).
+name: sfe
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sfe
+      POSTGRES_USER: sfe
+      POSTGRES_PASSWORD: ${SFE_DB_PASSWORD:?define SFE_DB_PASSWORD en .env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sfe -d sfe"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: { context: .., args: { MODULE: sfe-api } }
+    deploy: { replicas: 2 }
+    depends_on: { db: { condition: service_healthy } }
+    environment: &comunes
+      SPRING_PROFILES_ACTIVE: ${SFE_PROFILE:-dev}      # dev siembra el emisor ficticio y CAJA-01; en produccion NO usar dev
+      SFE_DB_URL: jdbc:postgresql://db:5432/sfe
+      SFE_DB_USER: sfe
+      SFE_DB_PASSWORD: ${SFE_DB_PASSWORD}
+      SFE_MASTER_KEY: ${SFE_MASTER_KEY:?define SFE_MASTER_KEY (openssl rand -base64 32)}
+      SFE_KEYSTORE_PATH: /run/secrets/sfe.p12
+      SFE_KEYSTORE_PASSWORD: ${SFE_KEYSTORE_PASSWORD:?define SFE_KEYSTORE_PASSWORD}
+    volumes: ["./secrets/sfe-dev.p12:/run/secrets/sfe.p12:ro"]
+    expose: ["8080"]            # 8081 (actuator) NO se publica
+    restart: unless-stopped
+
+  worker:
+    build: { context: .., args: { MODULE: sfe-worker } }
+    deploy: { replicas: 2 }
+    depends_on: [api]
+    environment: *comunes
+    restart: unless-stopped
+
+  proxy:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    ports: ["8080:80"]
+    volumes: ["./nginx.conf:/etc/nginx/conf.d/default.conf:ro"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:

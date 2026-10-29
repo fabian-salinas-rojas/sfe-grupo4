@@ -1,0 +1,38 @@
+server:
+  port: 8081                               # solo actuator (health/prometheus); el worker no expone API de negocio. Red interna.
+  shutdown: graceful
+spring:
+  application.name: sfe-worker
+  lifecycle.timeout-per-shutdown-phase: 30s
+  datasource:
+    url: ${SFE_DB_URL:jdbc:postgresql://localhost:5432/sfe}
+    username: ${SFE_DB_USER:sfe}
+    password: ${SFE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+      keepalive-time: 30000
+      max-lifetime: 600000
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: none
+  flyway.enabled: false                    # las migraciones las aplica sfe-api
+
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.probes.enabled: true
+
+sfe:
+  security.master-key: ${SFE_MASTER_KEY}
+  sunat:
+    url-beta: https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService
+    url-produccion: https://e-factura.sunat.gob.pe/ol-ti-itcpfegem/billService
+    beta-password: moddatos                # manual 2.3 / APF1 RF-08 dicen MODDATOS; los ejemplos SOAP usan moddatos: probar ambas
+    timeout-conexion: PT5S                 # exigido: 5 s de conexion
+    timeout-lectura: PT10S                 # exigido: 10 s de lectura
+  worker:
+    poll-interval: PT2S
+    lease: PT30S
+    batch-size: 10
+    backoff-base: PT10S
+    backoff-cap: PT15M

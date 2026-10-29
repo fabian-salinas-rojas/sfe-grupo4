@@ -1,0 +1,10 @@
+target/
+.idea/
+*.iml
+.vscode/
+secrets/
+.env
+*.p12
+*.pfx
+*.jks
+*.log
