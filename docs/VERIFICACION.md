@@ -131,9 +131,9 @@ creds SunatCredentials[...Secret.of("NuncaEnLog77")]            →  creds Sunat
 
 | Módulo | Resultado |
 |---|---|
-| `sfe-core` | 51 pruebas JUnit, 0 fallos |
+| `sfe-core` | 53 pruebas JUnit, 0 fallos (51 + 2 de `Rnf05EntornoTest`) |
 | `sfe-api` (`FlujoEmisionIT`) | 4/4 con PostgreSQL 16.15 real (Testcontainers 1.21.3) |
-| **Total** | **55 pruebas** |
+| **Total** | **57 pruebas** |
 
 - `RendimientoTest` (RNF-01): 50 emisiones concurrentes, p50 = 54 ms, p95 = 90 ms, máx = 95 ms (16 CPU). Límite: 1,2 s.
 - Nota Docker Desktop 29: Testcontainers necesita `~/.docker-java.properties` con `api.version=1.44`.
