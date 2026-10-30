@@ -74,6 +74,7 @@ class RepresentacionImpresaTest {
                        xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
                        xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
               <cbc:IssueDate>2026-10-30</cbc:IssueDate>
+              <cbc:Note languageLocaleID="1000">ONCE CON 80/100 SOLES</cbc:Note>
               <cbc:DocumentCurrencyCode>PEN</cbc:DocumentCurrencyCode>
               <cac:AccountingCustomerParty><cac:Party>
                 <cac:PartyIdentification><cbc:ID schemeID="6">20512345678</cbc:ID></cac:PartyIdentification>
@@ -102,7 +103,8 @@ class RepresentacionImpresaTest {
         PdfReader reader = new PdfReader(pdf);
         String texto = new PdfTextExtractor(reader).getTextFromPage(1);
         reader.close();
-        assertTrue(texto.contains("11.80"), "el total de la nota de debito no salio en el PDF: " + texto);
+        assertTrue(texto.contains("10.00"), "el subtotal de la nota de debito no salio en el PDF: " + texto);
+        assertTrue(texto.contains("SON: ONCE CON 80/100 SOLES"), "falta el monto en letras en el PDF: " + texto);
         assertTrue(texto.contains("10.00"), "el subtotal de la nota de debito no salio en el PDF: " + texto);
     }
 }

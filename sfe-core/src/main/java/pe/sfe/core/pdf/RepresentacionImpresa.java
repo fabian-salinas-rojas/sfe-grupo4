@@ -94,12 +94,14 @@ public final class RepresentacionImpresa {
             }
         }
 
+        // Leyenda 1000 (monto en letras): en UBL 2.1 va como <cbc:Note languageLocaleID="1000">
         String letras = "";
-        NodeList props = xml.getElementsByTagNameNS("*", "AdditionalProperty");
-        for (int i = 0; i < props.getLength(); i++) {
-            Element p = (Element) props.item(i);
-            if ("1000".equals(txt(p, "ID"))) {
-                letras = txt(p, "Value");
+        NodeList notas = xml.getElementsByTagNameNS(CBC, "Note");
+        for (int i = 0; i < notas.getLength(); i++) {
+            Element n = (Element) notas.item(i);
+            if ("1000".equals(n.getAttribute("languageLocaleID"))) {
+                letras = n.getTextContent().trim();
+                break;
             }
         }
         NodeList dv = xml.getElementsByTagNameNS(DS, "DigestValue");
