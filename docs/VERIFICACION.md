@@ -127,13 +127,13 @@ creds SunatCredentials[...Secret.of("NuncaEnLog77")]            →  creds Sunat
 
 ## 5. Ejecución real en la máquina del equipo (2026-10-29)
 
-`mvn -B verify` → **BUILD SUCCESS** (1:12 min).
+`mvn -B verify` → **BUILD SUCCESS** (2026-10-30, con RF-06: 57 pruebas en `sfe-core` + 5 de integración).
 
 | Módulo | Resultado |
 |---|---|
-| `sfe-core` | 53 pruebas JUnit, 0 fallos (51 + 2 de `Rnf05EntornoTest`) |
+| `sfe-core` | 57 pruebas JUnit, 0 fallos (51 + 2 de `Rnf05EntornoTest` + 4 de `RepresentacionImpresaTest`) |
 | `sfe-api` (`FlujoEmisionIT`) | 5/5 con PostgreSQL 16.15 real (Testcontainers 1.21.3) |
-| **Total** | **58 pruebas** |
+| **Total** | **62 pruebas** |
 
 - `RendimientoTest` (RNF-01): 50 emisiones concurrentes, p50 = 54 ms, p95 = 90 ms, máx = 95 ms (16 CPU). Límite: 1,2 s.
 - Nota Docker Desktop 29: Testcontainers necesita `~/.docker-java.properties` con `api.version=1.44`.

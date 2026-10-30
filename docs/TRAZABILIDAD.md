@@ -11,7 +11,7 @@ Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubie
 | RF-03 | ZIP + SOAP `wsse:Security` + `sendBill` | `ZipPackager`, `SunatSoapPayloads`, `SunatSoapClient` | `EmpaquetadoYSoapTest` (ZIP/payloads) · cliente Spring‑WS ejecutado contra BETA (F001‑3, B001‑1, FC01‑1 aceptados) | ✅ |
 | RF-04 | Procesar CDR y registrar estado | `CdrParser`, `EnvioClassifier`, `JdbcOutbox` | `CdrYPoliticaTest` · `FlujoEmisionIT` | ✅ |
 | RF-05 | Contingencia: timeout (>10 s) o caída → cola de reintentos sin bloquear la caja | outbox + `ProcesarEnviosService`, `Backoff`, timeouts 5 s/10 s | `CasosDeUsoTest.workerReprograma…`, SQL real (SKIP LOCKED, lease, fencing); prueba en vivo: worker detenido → F001‑4/5/6 PENDIENTE → ACEPTADO solos | ✅ |
-| RF-06 | PDF + QR | — | — | ❌ |
+| RF-06 | PDF A4 + QR (formato SUNAT) generado desde el XML firmado | `RepresentacionImpresa`, `QrSunat`, `PdfController` | `RepresentacionImpresaTest` (QR de 9 campos, PNG válido, PDF de factura y de nota de débito con `RequestedMonetaryTotal`) · prueba en vivo desde el frontend (Ver PDF) | ✅ |
 | RF-07 | Envío por correo | — | — | ❌ |
 | RF-08 | Autenticación BETA `[RUC]MODDATOS` | `SunatCredentials.beta` | `DominioTest.cp_auth_08…` (credencial) · login real en BETA (`20608945123MODDATOS`) | ✅ |
 | RF-09 | Notas de crédito/débito (Cat. 09/10, motivo, referencia) | `ReglasNegocio.validarNota`, `UblXmlBuilder` | `facturaBoletaNotas…`, `DominioTest.rn03…` | ✅ |
@@ -49,6 +49,7 @@ Los IDs son los de tus documentos (APF1 V3, APF2 V1, Stack Ideal). "✅" = cubie
 | CP-SOAP-03 | `sendBill` exitoso (BETA) | `sendBill` real contra BETA: F001‑3, B001‑1, FC01‑1, FD01‑1 con CDR 0 | ✅ |
 | CP-CDR-04 | Lectura de CDR aceptado y rechazado | `CdrYPoliticaTest` con los ejemplos C.1/C.2 del manual | ✅ |
 | CP-AUTH-08 | Login `[RUC]MODDATOS` | login real en BETA aceptado (contraseña `moddatos`) | ✅ |
+| CP-PDF-06 | PDF con QR y campos obligatorios | `RepresentacionImpresaTest` (4 pruebas) | ✅ |
 
 ## Evidencia en SUNAT BETA (2026‑10‑29)
 

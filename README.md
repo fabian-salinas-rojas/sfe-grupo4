@@ -30,7 +30,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 | Pieza | Estado | Evidencia |
 |---|---|---|
-| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso) | ✅ **53 pruebas JUnit pasan** (+ 5 de integración = 58) | `docs/VERIFICACION.md` |
+| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso, PDF + QR) | ✅ **57 pruebas JUnit pasan** (+ 5 de integración = 62) | `docs/VERIFICACION.md` |
 | Facturas, boletas, NC y ND contra los **XSD oficiales UBL 2.1** + firma verificada | ✅ | `EmisionPipelineTest`, ejemplos en `docs/ejemplos/` |
 | SQL del outbox, lease, fencing, correlativo sin saltos, inmutabilidad | ✅ **PostgreSQL 16.15 real**, sesiones concurrentes | `docs/VERIFICACION.md` |
 | Enmascaramiento de secretos en logs | ✅ **Logback real** + `LogMaskerTest` | `docs/VERIFICACION.md` |
@@ -179,8 +179,8 @@ Que un XML sea válido contra el XSD **no** garantiza que SUNAT lo acepte (aplic
 
 ## 9. Alcance actual y siguientes incrementos
 
-Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, reporte de contingencia (`GET /api/v1/contingencia`, RF-10), idempotencia.
-**No incluido** (declarado, no escondido): RF‑06 (PDF + QR), RF‑07 (correo al cliente), resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
+Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, reporte de contingencia (`GET /api/v1/contingencia`, RF-10), idempotencia, representación impresa PDF con QR (RF-06).
+**No incluido** (declarado, no escondido): RF‑07 (correo al cliente), resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
 el XML `SummaryDocuments`/`VoidedDocuments`, que usa XSD de SUNAT distintos a los de OASIS), `getStatusCdr` (solo producción), pago a crédito,
 ISC/IVAP/gratuitas/descuentos globales/detracción/retención, un certificado por emisor, alta de POS/emisores y consola (JWT), verificación de
 **autenticidad** de la firma de la CDR (hoy solo integridad: falta fijar el certificado de SUNAT), alertas sobre `sfe.comprobantes.plazo_vencido`.
