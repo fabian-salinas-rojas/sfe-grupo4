@@ -67,6 +67,9 @@ public final class RepresentacionImpresa {
 
         String igv = dinero(txt(desc(raiz, "TaxTotal"), "TaxAmount"));
         Element mon = desc(raiz, "LegalMonetaryTotal");
+        if (mon == null) {
+            mon = desc(raiz, "RequestedMonetaryTotal"); // UBL 2.1: la nota de debito usa este nodo en vez de LegalMonetaryTotal
+        }
         String subtotal = dinero(txt(mon, "LineExtensionAmount"));
         String total = dinero(txt(mon, "PayableAmount"));
 
