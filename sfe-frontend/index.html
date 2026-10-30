@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SFE Grupo 4 · Consola de pruebas</title>
+<style>
+:root{
+  --bg:#e8ecf0; --surface:#ffffff; --ink:#1b2733; --muted:#5a6978; --line:#cfd7df;
+  --accent:#0f5c8c; --accent-ink:#ffffff;
+  --ok:#1e7b4f; --ok-bg:#dff1e7; --warn:#8a5a00; --warn-bg:#fbefd0; --bad:#a8231b; --bad-bg:#f9dcd9;
+  --code-bg:#f3f6f9;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10161c; --surface:#18212a; --ink:#e4ebf1; --muted:#93a3b2; --line:#2c3946;
+    --accent:#4aa3da; --accent-ink:#08141d;
+    --ok:#5ccf93; --ok-bg:#15332a; --warn:#f0be5a; --warn-bg:#3a2e12; --bad:#ff8a80; --bad-bg:#3b1b19;
+    --code-bg:#111a22; color-scheme: dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
+header .sub{color:var(--muted);font-size:13px}
+.conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+main{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding:16px 24px 40px;max-width:1500px;margin:0 auto}
+@media(min-width:1000px){main{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+section{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+section h2{font-size:15px;margin:0 0 4px;font-weight:650}
+section p.hint{margin:0 0 12px;color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+input,select,textarea,button{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:grid;gap:10px;margin-bottom:10px}
+.r2{grid-template-columns:1fr 1fr} .r3{grid-template-columns:1fr 1fr 1fr}
+.r-id{grid-template-columns:1fr auto;align-items:end}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:4px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.small{padding:3px 8px;font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.items{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:13px}
+.items th{text-align:left;font-weight:500;color:var(--muted);padding:0 4px 3px}
+.items td{padding:2px 3px}
+.items input,.items select{padding:5px 6px}
+.total{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.total b{color:var(--ink);font-size:15px}
+textarea.json{font:13px/1.45 ui-monospace,Consolas,Menlo,monospace;background:var(--code-bg);min-height:190px;resize:vertical}
+pre{font:12.5px/1.45 ui-monospace,Consolas,Menlo,monospace;background:var(--code-bg);padding:10px 12px;border-radius:4px;overflow:auto;margin:8px 0 0;max-height:260px;white-space:pre-wrap;word-break:break-word}
+.result{margin-top:12px;font-size:13px}
+.result .line{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted)}
+.result .line b{color:var(--ink)}
+.tablewrap{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+table.data th{text-align:left;font-weight:500;color:var(--muted);padding:4px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(--code-bg)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:1px 9px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.chip.PENDIENTE{background:var(--warn-bg);color:var(--warn)}
+.chip.ACEPTADO{background:var(--ok-bg);color:var(--ok)}
+.chip.RECHAZADO,.chip.EXCEPCION{background:var(--bad-bg);color:var(--bad)}
+.chip.otro{background:var(--code-bg);color:var(--muted)}
+.chip .pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.chip .pulse{animation:none}}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+.empty code,.hint code{background:var(--code-bg);padding:1px 5px;border-radius:3px;font-size:12px}
+.err{color:var(--bad);font-size:13px;margin-top:8px}
+.idrow{display:flex;gap:8px}
+.badge{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>SFE Grupo 4 · Consola de pruebas</h1>
+  <span class="sub">Cliente visual del prototipo en BETA · no modifica el prototipo</span>
+  <div class="conn"><span class="dot" id="dot"></span><span id="connTxt">Comprobando conexión…</span></div>
+</header>
+
+<main>
+<div class="col">
+
+<section aria-labelledby="h-emitir">
+  <h2 id="h-emitir">Emitir comprobante</h2>
+  <p class="hint">Completa el formulario o edita el JSON directamente (necesario para notas de crédito y débito). Enviar el mismo identificador dos veces prueba la idempotencia.</p>
+
+  <div class="row r-id">
+    <div><label for="idv">Identificador de la venta (idVentaExterno)</label>
+      <input id="idv" autocomplete="off"></div>
+    <button type="button" id="nuevoId" class="small">Nuevo identificador</button>
+  </div>
+
+  <div class="row r3">
+    <div><label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="01">01 · Factura</option>
+        <option value="03">03 · Boleta</option>
+      </select></div>
+    <div><label for="moneda">Moneda</label>
+      <select id="moneda"><option>PEN</option><option>USD</option></select></div>
+    <div><label for="tdoc">Documento del cliente</label>
+      <select id="tdoc">
+        <option value="6">6 · RUC</option>
+        <option value="1">1 · DNI</option>
+        <option value="0">0 · Sin documento</option>
+      </select></div>
+  </div>
+  <div class="row r2">
+    <div><label for="ndoc">Número de documento</label><input id="ndoc" value="20512345678" autocomplete="off"></div>
+    <div><label for="den">Denominación</label><input id="den" value="CLIENTE EJEMPLO SAC" autocomplete="off"></div>
+  </div>
+
+  <label>Ítems</label>
+  <table class="items" id="items" aria-label="Ítems de la venta">
+    <thead><tr><th>Código</th><th>Descripción</th><th>Unidad</th><th>Cant.</th><th>V. unit.</th><th>IGV</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="actions" style="margin-top:0">
+    <button type="button" id="addItem" class="small">Agregar ítem</button>
+    <span class="total" id="total"></span>
+  </div>
+
+  <div style="margin-top:14px">
+    <label for="json">JSON que se enviará <span class="badge" id="dirtyBadge"></span></label>
+    <textarea id="json" class="json" spellcheck="false"></textarea>
+  </div>
+  <div class="actions">
+    <button type="button" class="primary" id="enviar">Emitir</button>
+    <button type="button" id="regen">Volver a generar desde el formulario</button>
+  </div>
+  <div id="resultado" class="result" aria-live="polite"></div>
+</section>
+
+</div>
+<div class="col">
+
+<section aria-labelledby="h-sesion">
+  <h2 id="h-sesion">Comprobantes de esta sesión</h2>
+  <p class="hint">Se actualizan solos cada 3 segundos mientras estén PENDIENTE. Haz clic en una fila para ver el detalle.</p>
+  <div class="tablewrap">
+    <table class="data" id="tHist"><thead><tr><th>Número</th><th>Estado</th><th>Total</th><th>CDR</th><th>PDF</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="actions"><button type="button" class="small" id="limpiar">Vaciar lista</button></div>
+</section>
+
+<section aria-labelledby="h-cont">
+  <h2 id="h-cont">Contingencia en vivo <span class="badge">GET /api/v1/contingencia</span></h2>
+  <p class="hint">Comprobantes que aún no tienen respuesta de SUNAT. Para verlo: detén los workers, emite una factura y vuelve a iniciarlos.</p>
+  <div class="tablewrap">
+    <table class="data" id="tCont"><thead><tr><th>Número</th><th>Envío</th><th>Intentos</th><th>Próximo intento</th><th>Plazo límite</th><th>Último error</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div id="contVacio" class="empty"></div>
+  <div class="empty">Detener: <code>docker compose stop worker</code> · Reanudar: <code>docker compose start worker</code> (dentro de <code>deploy/</code>)</div>
+</section>
+
+<section aria-labelledby="h-det">
+  <h2 id="h-det">Consultar un comprobante</h2>
+  <div class="idrow">
+    <input id="qid" placeholder="Id del comprobante (UUID)" autocomplete="off" aria-label="Id del comprobante">
+    <button type="button" id="consultar">Consultar</button>
+  </div>
+  <pre id="detalle">Sin consulta todavía.</pre>
+</section>
+
+</div>
+</main>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const FINAL = ["ACEPTADO","RECHAZADO","EXCEPCION"];
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => (Math.round(Number(n)*100)/100).toFixed(2);
+
+/* ---------- API ---------- */
+async function api(path, opts){
+  const r = await fetch("/api/v1"+path, opts);
+  const txt = await r.text();
+  let body; try { body = JSON.parse(txt); } catch { body = txt; }
+  return { status: r.status, headers: r.headers, body };
+}
+
+/* ---------- Historial (localStorage, con respaldo en memoria) ---------- */
+let hist = [];
+try { hist = JSON.parse(localStorage.getItem("sfeHist") || "[]"); } catch { hist = []; }
+const saveHist = () => { try { localStorage.setItem("sfeHist", JSON.stringify(hist.slice(0,50))); } catch {} };
+function upsert(c){
+  const i = hist.findIndex(h => h.id === c.id);
+  if (i >= 0) hist[i] = { ...hist[i], ...c }; else hist.unshift(c);
+  saveHist(); renderHist();
+}
+
+/* ---------- Chips ---------- */
+function chip(estado){
+  const cls = ["PENDIENTE","ACEPTADO","RECHAZADO","EXCEPCION"].includes(estado) ? estado : "otro";
+  const pulse = estado === "PENDIENTE" ? '<span class="pulse" aria-hidden="true"></span>' : "";
+  return `<span class="chip ${cls}">${pulse}${esc(estado)}</span>`;
+}
+
+/* ---------- Formulario → JSON ---------- */
+let dirty = false;
+function newId(){ return "WEB-" + Date.now().toString(36).toUpperCase(); }
+function addItemRow(v = {}){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input data-k="codigo" value="${esc(v.codigo ?? "P001")}" aria-label="Código" size="6"></td>
+    <td><input data-k="descripcion" value="${esc(v.descripcion ?? "Cuaderno A4")}" aria-label="Descripción"></td>
+    <td><input data-k="unidadMedida" value="${esc(v.unidadMedida ?? "NIU")}" aria-label="Unidad" size="4"></td>
+    <td><input data-k="cantidad" type="number" min="0" step="any" value="${esc(v.cantidad ?? 2)}" aria-label="Cantidad" style="width:70px"></td>
+    <td><input data-k="valorUnitario" type="number" min="0" step="any" value="${esc(v.valorUnitario ?? 50)}" aria-label="Valor unitario" style="width:84px"></td>
+    <td><select data-k="afectacionIgv" aria-label="Afectación IGV"><option value="10">10 · Gravado</option><option value="20">20 · Exonerado</option><option value="30">30 · Inafecto</option></select></td>
+    <td><button type="button" class="small" aria-label="Quitar ítem">✕</button></td>`;
+  tr.querySelector("select").value = v.afectacionIgv ?? "10";
+  tr.querySelector("button").onclick = () => { tr.remove(); refresh(); };
+  $("#items tbody").appendChild(tr);
+}
+function readItems(){
+  return [...$("#items tbody").rows].map(tr => {
+    const g = k => tr.querySelector(`[data-k="${k}"]`).value;
+    return { codigo:g("codigo"), descripcion:g("descripcion"), unidadMedida:g("unidadMedida"),
+      cantidad:Number(g("cantidad")), valorUnitario:Number(g("valorUnitario")), afectacionIgv:g("afectacionIgv") };
+  });
+}
+function buildVenta(){
+  return {
+    idVentaExterno: $("#idv").value.trim(),
+    tipo: $("#tipo").value,
+    moneda: $("#moneda").value,
+    adquirente: { tipoDocumento: $("#tdoc").value, numeroDocumento: $("#ndoc").value.trim(), denominacion: $("#den").value.trim() },
+    items: readItems()
+  };
+}
+function refresh(){
+  const v = buildVenta();
+  const base = v.items.reduce((s,i) => s + i.cantidad*i.valorUnitario, 0);
+  const igv = v.items.reduce((s,i) => s + (i.afectacionIgv === "10" ? i.cantidad*i.valorUnitario*0.18 : 0), 0);
+  $("#total").innerHTML = `Total estimado (IGV 18%): <b>${esc(v.moneda)} ${money(base+igv)}</b>`;
+  if (!dirty) $("#json").value = JSON.stringify(v, null, 2);
+  $("#dirtyBadge").textContent = dirty ? "· editado a mano" : "";
+}
+document.querySelectorAll("#idv,#tipo,#moneda,#tdoc,#ndoc,#den").forEach(e => e.addEventListener("input", refresh));
+$("#items").addEventListener("input", refresh);
+$("#json").addEventListener("input", () => { dirty = true; $("#dirtyBadge").textContent = "· editado a mano"; });
+$("#regen").onclick = () => { dirty = false; refresh(); };
+$("#addItem").onclick = () => { addItemRow({codigo:"P00"+($("#items tbody").rows.length+1), descripcion:"", cantidad:1, valorUnitario:10}); refresh(); };
+$("#nuevoId").onclick = () => { $("#idv").value = newId(); dirty = false; refresh(); };
+$("#tipo").addEventListener("change", () => {
+  if ($("#tipo").value === "03"){ $("#tdoc").value = "1"; $("#ndoc").value = "12345678"; $("#den").value = "CLIENTE VARIOS"; }
+  else { $("#tdoc").value = "6"; $("#ndoc").value = "20512345678"; $("#den").value = "CLIENTE EJEMPLO SAC"; }
+  dirty = false; refresh();
+});
+
+/* ---------- Emitir ---------- */
+$("#enviar").onclick = async () => {
+  const out = $("#resultado");
+  let payload;
+  try { payload = JSON.parse($("#json").value); }
+  catch (e) { out.innerHTML = `<div class="err">El JSON no es válido: ${esc(e.message)}</div>`; return; }
+  out.textContent = "Enviando…";
+  try {
+    const r = await api("/comprobantes", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+    const replay = r.headers.get("Idempotent-Replayed");
+    const ok = r.status >= 200 && r.status < 300 && r.body && r.body.id;
+    out.innerHTML = `<div class="line"><span>HTTP <b>${r.status}</b></span>` +
+      (replay !== null ? `<span>Idempotent-Replayed: <b>${esc(replay)}</b></span>` : "") +
+      (ok ? `<span>${chip(r.body.estado)} <b>${esc(r.body.numero)}</b></span>` : "") + `</div>` +
+      `<pre>${esc(typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2))}</pre>`;
+    if (ok){
+      upsert({ id:r.body.id, numero:r.body.numero, tipo:r.body.tipo, estado:r.body.estado, importeTotal:r.body.importeTotal,
+               cdrCodigo:r.body.cdrCodigo, cdrDescripcion:r.body.cdrDescripcion });
+      $("#qid").value = r.body.id;
+    }
+  } catch (e) {
+    out.innerHTML = `<div class="err">No se pudo llegar al prototipo. Revisa que <code>docker compose ps</code> muestre el proxy en el puerto 8080.</div>`;
+  }
+};
+
+/* ---------- Historial ---------- */
+function renderHist(){
+  const tb = $("#tHist tbody");
+  if (!hist.length){ tb.innerHTML = `<tr><td colspan="5" class="empty">Todavía no emitiste nada. Usa «Emitir» a la izquierda.</td></tr>`; return; }
+  tb.innerHTML = hist.map(h => `<tr class="click" data-id="${esc(h.id)}">
+    <td><b>${esc(h.numero)}</b></td><td>${chip(h.estado)}</td><td>${h.importeTotal != null ? money(h.importeTotal) : ""}</td>
+    <td>${h.cdrCodigo != null ? esc(h.cdrCodigo) + " · " + esc(h.cdrDescripcion) : ""}</td>
+    <td><a href="/api/v1/comprobantes/${esc(h.id)}/pdf" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver PDF</a></td></tr>`).join("");
+  tb.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => { $("#qid").value = tr.dataset.id; consultar(); });
+}
+$("#limpiar").onclick = () => { hist = []; saveHist(); renderHist(); };
+
+async function consultar(){
+  const id = $("#qid").value.trim();
+  if (!id) return;
+  $("#detalle").textContent = "Consultando…";
+  try {
+    const r = await api("/comprobantes/" + encodeURIComponent(id));
+    $("#detalle").textContent = "HTTP " + r.status + "\n" + (typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2));
+    if (r.status === 200 && r.body.id) upsert({ id:r.body.id, numero:r.body.numero, tipo:r.body.tipo, estado:r.body.estado,
+      importeTotal:r.body.importeTotal, cdrCodigo:r.body.cdrCodigo, cdrDescripcion:r.body.cdrDescripcion });
+  } catch { $("#detalle").textContent = "No se pudo llegar al prototipo."; }
+}
+$("#consultar").onclick = consultar;
+
+/* ---------- Contingencia + conexión + sondeo ---------- */
+async function pollCont(){
+  try {
+    const r = await api("/contingencia");
+    const dot = $("#dot"), txt = $("#connTxt");
+    if (r.status === 200 && Array.isArray(r.body)){
+      dot.className = "dot ok"; txt.textContent = "Conectado al prototipo (localhost:8080)";
+      const tb = $("#tCont tbody");
+      tb.innerHTML = r.body.map(c => `<tr>
+        <td><b>${esc(c.numero)}</b></td><td>${chip(c.estadoEnvio)}</td><td>${esc(c.intentos)}</td>
+        <td>${esc(c.proximoIntento ? new Date(c.proximoIntento).toLocaleTimeString() : "")}</td>
+        <td>${esc(c.plazoLimite)}${c.plazoVencido ? ' <span class="chip RECHAZADO">vencido</span>' : ""}</td>
+        <td>${esc(c.ultimoError ?? "")}</td></tr>`).join("");
+      $("#contVacio").textContent = r.body.length ? "" : "Nada en contingencia: todos los comprobantes tienen respuesta de SUNAT.";
+    } else {
+      dot.className = "dot bad";
+      txt.textContent = r.status === 401 || r.status === 403 ? "El prototipo rechazó la API key (revisa nginx.conf)" : "El prototipo respondió HTTP " + r.status;
+    }
+  } catch {
+    $("#dot").className = "dot bad"; $("#connTxt").textContent = "Sin conexión con el prototipo en localhost:8080";
+  }
+}
+async function pollHist(){
+  for (const h of hist.filter(h => !FINAL.includes(h.estado))){
+    try {
+      const r = await api("/comprobantes/" + encodeURIComponent(h.id));
+      if (r.status === 200 && r.body.estado !== h.estado)
+        upsert({ id:h.id, estado:r.body.estado, cdrCodigo:r.body.cdrCodigo, cdrDescripcion:r.body.cdrDescripcion });
+    } catch {}
+  }
+}
+setInterval(() => { pollCont(); pollHist(); }, 3000);
+
+/* ---------- Inicio ---------- */
+$("#idv").value = newId();
+addItemRow();
+refresh(); renderHist(); pollCont();
+</script>
+</body>
+</html>

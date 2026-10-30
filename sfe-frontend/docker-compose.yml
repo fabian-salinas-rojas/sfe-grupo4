@@ -1,0 +1,13 @@
+# Frontend independiente: no modifica nada del prototipo.
+# Levanta un nginx propio en :3000 que sirve la página y reenvía /api/ al prototipo (:8080).
+name: sfe-frontend
+services:
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
