@@ -24,11 +24,23 @@ spring:
   mvc.problemdetails.enabled: true
   jackson.deserialization.fail-on-unknown-properties: true
   servlet.multipart.enabled: false
+  mail:                                    # RF-07: SMTP por entorno; en desarrollo lo atiende Mailpit (docker-compose)
+    host: ${SFE_MAIL_HOST:localhost}
+    port: ${SFE_MAIL_PORT:1025}
+    username: ${SFE_MAIL_USER:}
+    password: ${SFE_MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${SFE_MAIL_AUTH:false}
+      mail.smtp.starttls.enable: ${SFE_MAIL_STARTTLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
 
 management:
   server.port: 8081                        # actuator en otro puerto: NO publicar al exterior
   endpoints.web.exposure.include: health,info,prometheus
   endpoint.health.probes.enabled: true
+  health.mail.enabled: false               # si el SMTP cae, la API sigue sana (solo falla el envio de correos)
 
 sfe:
   security.master-key: ${SFE_MASTER_KEY}   # Base64 de 32 bytes (AES-256). Obligatoria.
@@ -39,3 +51,4 @@ sfe:
     require-ruc-in-ou: true
   zip.dummy-folder: false                  # BETA exige ZIP sin carpeta dummy (con ella responde Client.0160)
   emision.plazo-envio-dias: 3              # RN-06
+  mail.from: ${SFE_MAIL_FROM:no-responder@sfe.local}

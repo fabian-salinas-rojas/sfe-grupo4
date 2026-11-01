@@ -27,6 +27,8 @@ services:
       SFE_MASTER_KEY: ${SFE_MASTER_KEY:?define SFE_MASTER_KEY (openssl rand -base64 32)}
       SFE_KEYSTORE_PATH: /run/secrets/sfe.p12
       SFE_KEYSTORE_PASSWORD: ${SFE_KEYSTORE_PASSWORD:?define SFE_KEYSTORE_PASSWORD}
+      SFE_MAIL_HOST: mailpit                           # RF-07: SMTP de pruebas (Mailpit); en produccion, el SMTP real por .env
+      SFE_MAIL_PORT: "1025"
     volumes: ["./secrets/sfe-dev.p12:/run/secrets/sfe.p12:ro"]
     expose: ["8080"]            # 8081 (actuator) NO se publica
     restart: unless-stopped
@@ -36,6 +38,12 @@ services:
     deploy: { replicas: 2 }
     depends_on: [api]
     environment: *comunes
+    restart: unless-stopped
+
+  mailpit:                       # RF-07: servidor SMTP de pruebas; bandeja web en http://localhost:8025 (solo local)
+    image: axllent/mailpit
+    ports: ["127.0.0.1:8025:8025"]
+    expose: ["1025"]
     restart: unless-stopped
 
   proxy:

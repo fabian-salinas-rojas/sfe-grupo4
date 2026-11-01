@@ -30,7 +30,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 | Pieza | Estado | Evidencia |
 |---|---|---|
-| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso, PDF + QR) | ✅ **57 pruebas JUnit pasan** (+ 5 de integración = 62) | `docs/VERIFICACION.md` |
+| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso, PDF + QR) | ✅ **57 pruebas JUnit pasan** (+ 9 de integración = 66; incluye 4 de correo) | `docs/VERIFICACION.md` |
 | Facturas, boletas, NC y ND contra los **XSD oficiales UBL 2.1** + firma verificada | ✅ | `EmisionPipelineTest`, ejemplos en `docs/ejemplos/` |
 | SQL del outbox, lease, fencing, correlativo sin saltos, inmutabilidad | ✅ **PostgreSQL 16.15 real**, sesiones concurrentes | `docs/VERIFICACION.md` |
 | Enmascaramiento de secretos en logs | ✅ **Logback real** + `LogMaskerTest` | `docs/VERIFICACION.md` |
@@ -107,6 +107,19 @@ La caja **no** envía serie, correlativo, fecha ni totales: los asigna el servid
 (RN‑02 exige identificarlo si supera S/ 700). Notas: `tipo` 07/08 + `referencia` + `motivo`.
 `422` = regla de negocio · `400` = formato · `401` = API Key · `503` = certificado no vigente (no se consume correlativo).
 
+### Correo al cliente (RF-07)
+
+Solo se envían comprobantes **aceptados por SUNAT** (si no, `409`). El correo lleva el PDF con QR y el XML firmado.
+En desarrollo el SMTP es **Mailpit** (incluido en `docker-compose`); la bandeja se ve en http://localhost:8025.
+
+```powershell
+Invoke-RestMethod -Method POST -Uri "http://localhost:8080/api/v1/comprobantes/<id>/correo" `
+  -ContentType "application/json" -Headers @{ "X-API-Key" = "<api key>" } -Body '{"destinatario":"cliente@ejemplo.com"}'
+```
+
+`200` enviado · `404` no existe o es de otra caja · `409` aún no aceptado · `400` correo inválido · `502` SMTP no disponible.
+SMTP real: variables `SFE_MAIL_HOST`, `SFE_MAIL_PORT`, `SFE_MAIL_USER`, `SFE_MAIL_PASSWORD`, `SFE_MAIL_AUTH`, `SFE_MAIL_STARTTLS`, `SFE_MAIL_FROM`.
+
 ## 5. Configuración (solo variables de entorno; BETA ↔ PROD sin recompilar, RNF‑05)
 
 | Variable / propiedad | Uso |
@@ -179,8 +192,8 @@ Que un XML sea válido contra el XSD **no** garantiza que SUNAT lo acepte (aplic
 
 ## 9. Alcance actual y siguientes incrementos
 
-Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, reporte de contingencia (`GET /api/v1/contingencia`, RF-10), idempotencia, representación impresa PDF con QR (RF-06).
-**No incluido** (declarado, no escondido): RF‑07 (correo al cliente), resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
+Implementado: factura, boleta, NC y ND onerosas (IGV 10/20/30/40), contado, PEN/USD, `sendBill` síncrono, CDR, contingencia, reporte de contingencia (`GET /api/v1/contingencia`, RF-10), idempotencia, representación impresa PDF con QR (RF-06), envío por correo con PDF y XML adjuntos (RF-07).
+**No incluido** (declarado, no escondido): resumen diario / comunicación de baja (`sendSummary` + `getStatus` existen en el cliente, pero falta
 el XML `SummaryDocuments`/`VoidedDocuments`, que usa XSD de SUNAT distintos a los de OASIS), `getStatusCdr` (solo producción), pago a crédito,
 ISC/IVAP/gratuitas/descuentos globales/detracción/retención, un certificado por emisor, alta de POS/emisores y consola (JWT), verificación de
 **autenticidad** de la firma de la CDR (hoy solo integridad: falta fijar el certificado de SUNAT), alertas sobre `sfe.comprobantes.plazo_vencido`.
