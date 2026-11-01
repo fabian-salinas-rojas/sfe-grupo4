@@ -28,8 +28,8 @@ public final class Fixtures {
     }
 
     public static Emisor emisor() {
-        return new Emisor(RUC, "COMERCIAL ANDINA SAC", "ANDINA MARKET", "150101", "AV. AREQUIPA 1234 - OF. 5",
-                "LIMA", "LIMA", "LIMA");
+        return new Emisor(RUC, "DISTRIBUIDORA & LOGISTICA COMERCIAL DEL SUR S.A.C.", "LOGISTICA DEL SUR", "040101", "AV. VENEZUELA 1500",
+                "AREQUIPA", "AREQUIPA", "AREQUIPA");
     }
 
     public static ItemVenta item(String desc, String cant, String vu, String afect) {

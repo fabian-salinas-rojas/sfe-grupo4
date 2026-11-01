@@ -15,8 +15,8 @@ import pe.sfe.core.pdf.RepresentacionImpresa;
 /** RF-06: QR con el formato de SUNAT y PDF generado desde un XML UBL. */
 class RepresentacionImpresaTest {
 
-    private static final Emisor EMISOR = new Emisor("20608945123", "COMERCIAL ANDINA SAC", "ANDINA MARKET",
-            "150101", "AV. AREQUIPA 1234 - OF. 5", "LIMA", "LIMA", "LIMA");
+    private static final Emisor EMISOR = new Emisor("20608945123", "DISTRIBUIDORA & LOGISTICA COMERCIAL DEL SUR S.A.C.", "LOGISTICA DEL SUR",
+            "040101", "AV. VENEZUELA 1500", "AREQUIPA", "AREQUIPA", "AREQUIPA");
 
     private static final String XML = """
             <?xml version="1.0" encoding="ISO-8859-1"?>
