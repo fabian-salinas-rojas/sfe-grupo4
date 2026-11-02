@@ -290,7 +290,7 @@ function renderHist(){
   tb.innerHTML = hist.map(h => `<tr class="click" data-id="${esc(h.id)}">
     <td><b>${esc(h.numero)}</b></td><td>${chip(h.estado)}</td><td>${h.importeTotal != null ? money(h.importeTotal) : ""}</td>
     <td>${h.cdrCodigo != null ? esc(h.cdrCodigo) + " · " + esc(h.cdrDescripcion) : ""}</td>
-    <td><a href="/api/v1/comprobantes/${esc(h.id)}/pdf" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver PDF</a></td></tr>`).join("");
+    <td>${h.estado === "RECHAZADO" || h.estado === "EXCEPCION" ? "—" : `<a href="/api/v1/comprobantes/${esc(h.id)}/pdf" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver PDF</a>`}</td></tr>`).join("");
   tb.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => { $("#qid").value = tr.dataset.id; consultar(); });
 }
 $("#limpiar").onclick = () => { hist = []; saveHist(); renderHist(); };

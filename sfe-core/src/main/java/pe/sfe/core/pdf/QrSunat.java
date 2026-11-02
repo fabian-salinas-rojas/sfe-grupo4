@@ -26,10 +26,11 @@ public final class QrSunat {
                 tipoDocCliente, numDocCliente) + "|";
     }
 
+    /** Nivel de correccion de errores Q (~25 %), el que pide SUNAT para el QR de la representacion impresa. */
     public static byte[] png(String contenido, int lado) {
         try {
             BitMatrix m = new QRCodeWriter().encode(contenido, BarcodeFormat.QR_CODE, lado, lado,
-                    Map.of(EncodeHintType.MARGIN, 1, EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M));
+                    Map.of(EncodeHintType.MARGIN, 1, EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.Q));
             BufferedImage img = new BufferedImage(m.getWidth(), m.getHeight(), BufferedImage.TYPE_INT_RGB);
             for (int x = 0; x < m.getWidth(); x++) {
                 for (int y = 0; y < m.getHeight(); y++) {

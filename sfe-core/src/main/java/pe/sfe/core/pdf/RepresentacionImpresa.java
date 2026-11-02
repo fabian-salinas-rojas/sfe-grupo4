@@ -53,8 +53,19 @@ public final class RepresentacionImpresa {
     }
 
     public static byte[] generar(Emisor emisor, TipoComprobante tipo, String serie, long correlativo, byte[] xmlFirmado) {
+        return generar(emisor, tipo, serie, correlativo, xmlFirmado, null);
+    }
+
+    /**
+     * @param emisorDeRespaldo datos del emisor en BD: solo se usan para lo que el XML firmado no trae. Lo impreso y el QR
+     *                         salen del XML firmado, que es lo que SUNAT recibio.
+     * @param aviso            texto opcional que se imprime bajo la cabecera (por ejemplo, comprobante aun sin CDR); null = nada.
+     */
+    public static byte[] generar(Emisor emisorDeRespaldo, TipoComprobante tipo, String serie, long correlativo,
+                                 byte[] xmlFirmado, String aviso) {
         org.w3c.dom.Document xml = parsear(xmlFirmado);
         Element raiz = xml.getDocumentElement();
+        Emisor emisor = emisorDelXml(raiz, emisorDeRespaldo);
 
         String numero = serie + "-" + correlativo;
         String fecha = txt(raiz, "IssueDate");
@@ -104,6 +115,24 @@ public final class RepresentacionImpresa {
                 break;
             }
         }
+        // Notas de credito/debito: documento que modifican y motivo (UBL: BillingReference y DiscrepancyResponse)
+        String docModificado = "";
+        String motivo = "";
+        if ("07".equals(tipo.codigo()) || "08".equals(tipo.codigo())) {
+            Element ref = desc(raiz, "BillingReference/InvoiceDocumentReference");
+            String refNum = txt(ref, "ID");
+            String refTipo = txt(ref, "DocumentTypeCode");
+            if (!refNum.isBlank()) {
+                docModificado = (refTipo.isBlank() ? "Documento" : nombreTipoDoc(refTipo)) + " " + refNum;
+            }
+            Element dr = desc(raiz, "DiscrepancyResponse");
+            String codMotivo = txt(dr, "ResponseCode");
+            String desMotivo = txt(dr, "Description");
+            motivo = (codMotivo.isBlank() ? "" : codMotivo + " - ") + desMotivo;
+            if (docModificado.isBlank()) {
+                docModificado = txt(dr, "ReferenceID");
+            }
+        }
         NodeList dv = xml.getElementsByTagNameNS(DS, "DigestValue");
         String hash = dv.getLength() > 0 ? dv.item(0).getTextContent().trim() : "";
 
@@ -124,8 +153,7 @@ public final class RepresentacionImpresa {
             if (emisor.nombreComercial() != null && !emisor.nombreComercial().isBlank()) {
                 izq.addElement(new Paragraph(emisor.nombreComercial(), NORMAL));
             }
-            izq.addElement(new Paragraph(emisor.direccion() + " - " + emisor.distrito() + ", "
-                    + emisor.provincia() + ", " + emisor.departamento(), NORMAL));
+            izq.addElement(new Paragraph(direccionCompleta(emisor), NORMAL));
             cab.addCell(izq);
             PdfPCell der = new PdfPCell();
             der.setBorder(Rectangle.BOX);
@@ -137,14 +165,23 @@ public final class RepresentacionImpresa {
             doc.add(cab);
 
             // Cliente
-            PdfPTable cli = new PdfPTable(new float[] {20, 80});
+            PdfPTable cli = new PdfPTable(new float[] {27, 73});
             cli.setWidthPercentage(100);
             cli.setSpacingBefore(12);
             fila(cli, "Cliente:", cliNombre);
             fila(cli, nombreDoc(cliTipoDoc) + ":", cliNumDoc);
             fila(cli, "Fecha de emisi\u00f3n:", fecha);
             fila(cli, "Moneda:", moneda);
+            if (!docModificado.isBlank()) {
+                fila(cli, "Documento que modifica:", docModificado);
+                fila(cli, "Motivo:", motivo);
+            }
             doc.add(cli);
+            if (aviso != null && !aviso.isBlank()) {
+                Paragraph av = new Paragraph(aviso, NEGRITA);
+                av.setSpacingBefore(8);
+                doc.add(av);
+            }
 
             // Items
             PdfPTable it = new PdfPTable(new float[] {12, 40, 8, 10, 15, 15});
@@ -250,6 +287,60 @@ public final class RepresentacionImpresa {
     private static String txt(Element padre, String cbc) {
         Element e = hijo(padre, CBC, cbc);
         return e == null ? "" : e.getTextContent().trim();
+    }
+
+    // ------------------------------------------------------------------ emisor
+
+    /**
+     * Emisor tal como quedo en el XML firmado (cac:AccountingSupplierParty). Lo que el XML no trae se toma del respaldo,
+     * de modo que el PDF y el QR nunca difieran de lo que SUNAT recibio aunque la ficha del emisor cambie despues.
+     */
+    private static Emisor emisorDelXml(Element raiz, Emisor respaldo) {
+        Element party = desc(raiz, "AccountingSupplierParty/Party");
+        if (party == null) {
+            return respaldo;
+        }
+        String ruc = txt(desc(party, "PartyIdentification"), "ID");
+        Element ple = desc(party, "PartyLegalEntity");
+        String razon = txt(ple, "RegistrationName");
+        String comercial = txt(desc(party, "PartyName"), "Name");
+        if (comercial.equals(razon)) {
+            comercial = ""; // el generador repite la razon social cuando no hay nombre comercial
+        }
+        Element dir = desc(ple, "RegistrationAddress");
+        String linea = txt(desc(dir, "AddressLine"), "Line");
+        return new Emisor(
+                preferir(ruc, respaldo == null ? null : respaldo.ruc()),
+                preferir(razon, respaldo == null ? null : respaldo.razonSocial()),
+                comercial.isBlank() ? (respaldo == null ? null : respaldo.nombreComercial()) : comercial,
+                respaldo == null ? null : respaldo.ubigeo(),
+                preferir(linea, respaldo == null ? null : respaldo.direccion()),
+                preferir(txt(dir, "CountrySubentity"), respaldo == null ? null : respaldo.departamento()),
+                preferir(txt(dir, "CityName"), respaldo == null ? null : respaldo.provincia()),
+                preferir(txt(dir, "District"), respaldo == null ? null : respaldo.distrito()));
+    }
+
+    private static String preferir(String delXml, String respaldo) {
+        return delXml != null && !delXml.isBlank() ? delXml.trim() : (respaldo == null ? "" : respaldo.trim());
+    }
+
+    /** "Av. X - Distrito, Provincia, Departamento" omitiendo los tramos vacios. */
+    private static String direccionCompleta(Emisor e) {
+        StringBuilder sb = new StringBuilder(e.direccion() == null ? "" : e.direccion().trim());
+        String zona = String.join(", ", java.util.stream.Stream.of(e.distrito(), e.provincia(), e.departamento())
+                .filter(x -> x != null && !x.isBlank()).map(String::trim).toList());
+        if (!zona.isBlank()) {
+            sb.append(sb.length() > 0 ? " - " : "").append(zona);
+        }
+        return sb.toString();
+    }
+
+    private static String nombreTipoDoc(String codigo) {
+        return switch (codigo) {
+            case "01" -> "Factura electr\u00f3nica";
+            case "03" -> "Boleta de venta electr\u00f3nica";
+            default -> "Documento " + codigo;
+        };
     }
 
     // ------------------------------------------------------------------ formato

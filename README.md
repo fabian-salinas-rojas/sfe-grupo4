@@ -30,7 +30,7 @@ el **Stack Ideal**, el **APF1** y el **APF2** del Grupo 4. Monolito modular en *
 
 | Pieza | Estado | Evidencia |
 |---|---|---|
-| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso, PDF + QR) | ✅ **57 pruebas JUnit pasan** (+ 9 de integración = 66; incluye 4 de correo) | `docs/VERIFICACION.md` |
+| `sfe-core` (UBL, XSD, firma, ZIP, CDR, política, casos de uso, PDF + QR) | ✅ **62 pruebas JUnit pasan** (+ 9 de integración = 71; incluye 4 de correo) | `docs/VERIFICACION.md` |
 | Facturas, boletas, NC y ND contra los **XSD oficiales UBL 2.1** + firma verificada | ✅ | `EmisionPipelineTest`, ejemplos en `docs/ejemplos/` |
 | SQL del outbox, lease, fencing, correlativo sin saltos, inmutabilidad | ✅ **PostgreSQL 16.15 real**, sesiones concurrentes | `docs/VERIFICACION.md` |
 | Enmascaramiento de secretos en logs | ✅ **Logback real** + `LogMaskerTest` | `docs/VERIFICACION.md` |
@@ -107,9 +107,15 @@ La caja **no** envía serie, correlativo, fecha ni totales: los asigna el servid
 (RN‑02 exige identificarlo si supera S/ 700). Notas: `tipo` 07/08 + `referencia` + `motivo`.
 `422` = regla de negocio · `400` = formato · `401` = API Key · `503` = certificado no vigente (no se consume correlativo).
 
+### Representación impresa (RF-06)
+
+`GET /api/v1/comprobantes/{id}/pdf` genera el PDF A4 con QR **desde el XML firmado** (emisor, totales y QR salen de lo que se envió a SUNAT; el QR usa corrección de errores nivel Q). Las notas imprimen el documento que modifican y el motivo.
+`409` si el comprobante está RECHAZADO o en EXCEPCION (no es válido ante SUNAT); si aún no tiene CDR (PENDIENTE / EN_CONTINGENCIA) se imprime con un aviso visible.
+
 ### Correo al cliente (RF-07)
 
 Solo se envían comprobantes **aceptados por SUNAT** (si no, `409`). El correo lleva el PDF con QR y el XML firmado.
+El envío es **bajo demanda** (lo pide la caja o el frontend); el despacho automático y asíncrono tras el CDR que describe el APF1 queda como siguiente incremento.
 En desarrollo el SMTP es **Mailpit** (incluido en `docker-compose`); la bandeja se ve en http://localhost:8025.
 
 ```powershell

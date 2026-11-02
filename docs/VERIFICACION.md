@@ -127,11 +127,11 @@ creds SunatCredentials[...Secret.of("NuncaEnLog77")]            →  creds Sunat
 
 ## 5. Ejecución real en la máquina del equipo (2026-10-29)
 
-`mvn -B verify` → **BUILD SUCCESS** (2026-10-30, con RF-06: 57 pruebas en `sfe-core` + 5 de integración).
+`mvn -B verify` → **BUILD SUCCESS** (2026-11-01, con RF-06 pulido y RF-07: 62 pruebas en `sfe-core` + 9 de integración).
 
 | Módulo | Resultado |
 |---|---|
-| `sfe-core` | 57 pruebas JUnit, 0 fallos (51 + 2 de `Rnf05EntornoTest` + 4 de `RepresentacionImpresaTest`) |
+| `sfe-core` | 62 pruebas JUnit, 0 fallos (51 + 2 de `Rnf05EntornoTest` + 9 de `RepresentacionImpresaTest`) |
 | `sfe-api` (`FlujoEmisionIT`) | 5/5 con PostgreSQL 16.15 real (Testcontainers 1.21.3) |
 | **Total** | **62 pruebas** |
 
