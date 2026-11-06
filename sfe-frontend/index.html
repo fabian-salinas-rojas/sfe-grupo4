@@ -64,8 +64,8 @@ table.data th{text-align:left;font-weight:500;color:var(--muted);padding:4px 8px
 table.data td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
 table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(--code-bg)}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:1px 9px;border-radius:99px;font-size:12.5px;font-weight:600;white-space:nowrap}
-.chip.PENDIENTE{background:var(--warn-bg);color:var(--warn)}
-.chip.ACEPTADO{background:var(--ok-bg);color:var(--ok)}
+.chip.PENDIENTE,.chip.EN_CONTINGENCIA{background:var(--warn-bg);color:var(--warn)}
+.chip.ACEPTADO,.chip.ACEPTADO_CON_OBSERVACIONES{background:var(--ok-bg);color:var(--ok)}
 .chip.RECHAZADO,.chip.EXCEPCION{background:var(--bad-bg);color:var(--bad)}
 .chip.otro{background:var(--code-bg);color:var(--muted)}
 .chip .pulse{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.2s ease-in-out infinite}
@@ -75,6 +75,8 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
 .empty code,.hint code{background:var(--code-bg);padding:1px 5px;border-radius:3px;font-size:12px}
 .err{color:var(--bad);font-size:13px;margin-top:8px}
 .idrow{display:flex;gap:8px}
+.r-id a{padding:7px 4px;font-size:13px;white-space:nowrap}
+[hidden]{display:none!important}
 .badge{font-size:12px;color:var(--muted)}
 </style>
 </head>
@@ -90,7 +92,20 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
 
 <section aria-labelledby="h-emitir">
   <h2 id="h-emitir">Emitir comprobante</h2>
-  <p class="hint">Completa el formulario o edita el JSON directamente (necesario para notas de crédito y débito). Enviar el mismo identificador dos veces prueba la idempotencia.</p>
+  <p class="hint">Completa el formulario o edita el JSON directamente. Enviar el mismo identificador dos veces prueba la idempotencia.</p>
+
+  <div class="row r-id">
+    <div><label for="caso">Casos de prueba rápidos</label>
+      <select id="caso">
+        <option value="">— elegir un caso —</option>
+        <option value="usd">Factura en dólares (USD)</option>
+        <option value="mixto">Factura con ítems gravado y exonerado</option>
+        <option value="bolcf">Boleta consumidor final (S/ 50, sin cliente)</option>
+        <option value="bol700">Boleta mayor a S/ 700 sin identificar (esperado: 422)</option>
+        <option value="vacio">Factura sin ítems (esperado: 400)</option>
+      </select></div>
+    <button type="button" id="cargarCaso" class="small">Cargar caso</button>
+  </div>
 
   <div class="row r-id">
     <div><label for="idv">Identificador de la venta (idVentaExterno)</label>
@@ -103,6 +118,8 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
       <select id="tipo">
         <option value="01">01 · Factura</option>
         <option value="03">03 · Boleta</option>
+        <option value="07">07 · Nota de crédito</option>
+        <option value="08">08 · Nota de débito</option>
       </select></div>
     <div><label for="moneda">Moneda</label>
       <select id="moneda"><option>PEN</option><option>USD</option></select></div>
@@ -116,6 +133,19 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
   <div class="row r2">
     <div><label for="ndoc">Número de documento</label><input id="ndoc" value="20512345678" autocomplete="off"></div>
     <div><label for="den">Denominación</label><input id="den" value="CLIENTE EJEMPLO SAC" autocomplete="off"></div>
+  </div>
+
+  <div id="nota" hidden>
+    <div class="row r3">
+      <div><label for="nTipo">Documento que modifica</label>
+        <select id="nTipo"><option value="01">01 · Factura</option><option value="03">03 · Boleta</option></select></div>
+      <div><label for="nSerie">Serie</label><input id="nSerie" value="F001" maxlength="4" autocomplete="off"></div>
+      <div><label for="nCorr">Correlativo</label><input id="nCorr" type="number" min="1" value="25"></div>
+    </div>
+    <div class="row r2">
+      <div><label for="nMotCod">Código de motivo</label><input id="nMotCod" value="01" maxlength="2" autocomplete="off"></div>
+      <div><label for="nMotDes">Descripción del motivo</label><input id="nMotDes" value="Anulacion de la operacion" autocomplete="off"></div>
+    </div>
   </div>
 
   <label>Ítems</label>
@@ -145,10 +175,18 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
 <section aria-labelledby="h-sesion">
   <h2 id="h-sesion">Comprobantes de esta sesión</h2>
   <p class="hint">Se actualizan solos cada 3 segundos mientras estén PENDIENTE. Haz clic en una fila para ver el detalle.</p>
+  <div id="resumen" class="badge" style="margin-bottom:8px" aria-live="polite"></div>
   <div class="tablewrap">
-    <table class="data" id="tHist"><thead><tr><th>Número</th><th>Estado</th><th>Total</th><th>CDR</th><th>PDF</th></tr></thead><tbody></tbody></table>
+    <table class="data" id="tHist"><thead><tr><th>Número</th><th>Estado</th><th>Total</th><th>CDR</th><th>Tiempo</th><th>PDF</th><th>Correo</th></tr></thead><tbody></tbody></table>
   </div>
-  <div class="actions"><button type="button" class="small" id="limpiar">Vaciar lista</button></div>
+  <div class="row r-id" style="margin-top:12px">
+    <div><label for="mail">Correo del cliente (RF-07: solo comprobantes aceptados)</label>
+      <input id="mail" type="email" value="cliente@ejemplo.com" autocomplete="off"></div>
+    <a href="http://localhost:8025" target="_blank" rel="noopener">Abrir Mailpit</a>
+  </div>
+  <div id="mailMsg" class="empty" aria-live="polite"></div>
+  <div class="actions"><button type="button" class="small" id="limpiar">Vaciar lista</button>
+    <button type="button" class="small" id="csv">Exportar CSV</button></div>
 </section>
 
 <section aria-labelledby="h-cont">
@@ -176,7 +214,9 @@ table.data tr.click{cursor:pointer} table.data tr.click:hover td{background:var(
 <script>
 "use strict";
 const $ = s => document.querySelector(s);
-const FINAL = ["ACEPTADO","RECHAZADO","EXCEPCION"];
+const FINAL = ["ACEPTADO","ACEPTADO_CON_OBSERVACIONES","RECHAZADO","EXCEPCION"];
+const esAceptado = e => e === "ACEPTADO" || e === "ACEPTADO_CON_OBSERVACIONES";
+const MAILPIT = "http://localhost:8025";
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money = n => (Math.round(Number(n)*100)/100).toFixed(2);
 
@@ -188,21 +228,38 @@ async function api(path, opts){
   return { status: r.status, headers: r.headers, body };
 }
 
+/* ---------- Mensajes de error comprensibles ---------- */
+function explain(r, ctx){
+  const det = r.body && typeof r.body === "object" ? (r.body.detail || r.body.title || "") : "";
+  switch (r.status){
+    case 400: return "Los datos enviados no cumplen el formato: revisa los campos obligatorios y que haya al menos un ítem.";
+    case 401: case 403: return "El prototipo rechazó la API key (revisa nginx.conf).";
+    case 404: return "No existe ese comprobante (o es de otra caja).";
+    case 409: return ctx === "correo" ? "Todavía no está aceptado por SUNAT: espera al estado ACEPTADO y reintenta." : "Conflicto: " + det;
+    case 422: return "Regla de negocio no cumplida: " + (r.body && Array.isArray(r.body.violaciones) && r.body.violaciones.length ? r.body.violaciones.join(" · ") : det);
+    case 502: return "El servidor de correo no respondió. Revisa que Mailpit esté arriba (docker compose ps).";
+    case 503: return "Certificado no vigente: no se consumió correlativo. " + det;
+    default: return "HTTP " + r.status + (det ? " · " + det : "");
+  }
+}
+
 /* ---------- Historial (localStorage, con respaldo en memoria) ---------- */
 let hist = [];
 try { hist = JSON.parse(localStorage.getItem("sfeHist") || "[]"); } catch { hist = []; }
 const saveHist = () => { try { localStorage.setItem("sfeHist", JSON.stringify(hist.slice(0,50))); } catch {} };
 function upsert(c){
   const i = hist.findIndex(h => h.id === c.id);
-  if (i >= 0) hist[i] = { ...hist[i], ...c }; else hist.unshift(c);
+  const next = { ...(i >= 0 ? hist[i] : {}), ...c };
+  if (FINAL.includes(next.estado) && !next.finalEn) next.finalEn = Date.now();
+  if (i >= 0) hist[i] = next; else hist.unshift(next);
   saveHist(); renderHist();
 }
 
 /* ---------- Chips ---------- */
 function chip(estado){
-  const cls = ["PENDIENTE","ACEPTADO","RECHAZADO","EXCEPCION"].includes(estado) ? estado : "otro";
-  const pulse = estado === "PENDIENTE" ? '<span class="pulse" aria-hidden="true"></span>' : "";
-  return `<span class="chip ${cls}">${pulse}${esc(estado)}</span>`;
+  const cls = ["PENDIENTE","EN_CONTINGENCIA","ACEPTADO","ACEPTADO_CON_OBSERVACIONES","RECHAZADO","EXCEPCION"].includes(estado) ? estado : "otro";
+  const pulse = (estado === "PENDIENTE" || estado === "EN_CONTINGENCIA") ? '<span class="pulse" aria-hidden="true"></span>' : "";
+  return `<span class="chip ${cls}">${pulse}${esc(String(estado).replace(/_/g, " "))}</span>`;
 }
 
 /* ---------- Formulario → JSON ---------- */
@@ -230,13 +287,18 @@ function readItems(){
   });
 }
 function buildVenta(){
-  return {
+  const v = {
     idVentaExterno: $("#idv").value.trim(),
     tipo: $("#tipo").value,
     moneda: $("#moneda").value,
     adquirente: { tipoDocumento: $("#tdoc").value, numeroDocumento: $("#ndoc").value.trim(), denominacion: $("#den").value.trim() },
     items: readItems()
   };
+  if (v.tipo === "07" || v.tipo === "08"){
+    v.referencia = { tipo: $("#nTipo").value, serie: $("#nSerie").value.trim().toUpperCase(), correlativo: Number($("#nCorr").value) };
+    v.motivo = { codigo: $("#nMotCod").value.trim(), descripcion: $("#nMotDes").value.trim() };
+  }
+  return v;
 }
 function refresh(){
   const v = buildVenta();
@@ -246,7 +308,7 @@ function refresh(){
   if (!dirty) $("#json").value = JSON.stringify(v, null, 2);
   $("#dirtyBadge").textContent = dirty ? "· editado a mano" : "";
 }
-document.querySelectorAll("#idv,#tipo,#moneda,#tdoc,#ndoc,#den").forEach(e => e.addEventListener("input", refresh));
+document.querySelectorAll("#idv,#tipo,#moneda,#tdoc,#ndoc,#den,#nTipo,#nSerie,#nCorr,#nMotCod,#nMotDes").forEach(e => e.addEventListener("input", refresh));
 $("#items").addEventListener("input", refresh);
 $("#json").addEventListener("input", () => { dirty = true; $("#dirtyBadge").textContent = "· editado a mano"; });
 $("#regen").onclick = () => { dirty = false; refresh(); };
@@ -255,8 +317,28 @@ $("#nuevoId").onclick = () => { $("#idv").value = newId(); dirty = false; refres
 $("#tipo").addEventListener("change", () => {
   if ($("#tipo").value === "03"){ $("#tdoc").value = "1"; $("#ndoc").value = "12345678"; $("#den").value = "CLIENTE VARIOS"; }
   else { $("#tdoc").value = "6"; $("#ndoc").value = "20512345678"; $("#den").value = "CLIENTE EJEMPLO SAC"; }
+  $("#nota").hidden = !["07","08"].includes($("#tipo").value);
   dirty = false; refresh();
 });
+
+/* ---------- Casos de prueba rápidos ---------- */
+const RUC = { tipoDocumento:"6", numeroDocumento:"20512345678", denominacion:"CLIENTE EJEMPLO SAC" };
+const it = (d, c, v, a) => ({ codigo:"P" + d, descripcion:"Producto " + d, unidadMedida:"NIU", cantidad:c, valorUnitario:v, afectacionIgv:a || "10" });
+const CASOS = {
+  usd:    () => ({ tipo:"01", moneda:"USD", adquirente:RUC, items:[ it("001", 3, 25) ] }),
+  mixto:  () => ({ tipo:"01", moneda:"PEN", adquirente:RUC, items:[ it("001", 2, 50, "10"), it("002", 1, 80, "20") ] }),
+  bolcf:  () => ({ tipo:"03", moneda:"PEN", items:[ it("001", 1, 42.37) ] }),
+  bol700: () => ({ tipo:"03", moneda:"PEN", items:[ it("001", 1, 800) ] }),
+  vacio:  () => ({ tipo:"01", moneda:"PEN", adquirente:RUC, items:[] })
+};
+$("#cargarCaso").onclick = () => {
+  const f = CASOS[$("#caso").value];
+  if (!f) return;
+  $("#idv").value = newId();
+  $("#json").value = JSON.stringify({ idVentaExterno: $("#idv").value, ...f() }, null, 2);
+  dirty = true; $("#dirtyBadge").textContent = "· caso de prueba cargado";
+  $("#resultado").textContent = "Caso cargado. Pulsa «Emitir» para enviarlo. «Volver a generar desde el formulario» lo descarta.";
+};
 
 /* ---------- Emitir ---------- */
 $("#enviar").onclick = async () => {
@@ -269,13 +351,14 @@ $("#enviar").onclick = async () => {
     const r = await api("/comprobantes", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
     const replay = r.headers.get("Idempotent-Replayed");
     const ok = r.status >= 200 && r.status < 300 && r.body && r.body.id;
+    const why = ok ? "" : `<div class="err">${esc(explain(r, "emitir"))}</div>`;
     out.innerHTML = `<div class="line"><span>HTTP <b>${r.status}</b></span>` +
       (replay !== null ? `<span>Idempotent-Replayed: <b>${esc(replay)}</b></span>` : "") +
       (ok ? `<span>${chip(r.body.estado)} <b>${esc(r.body.numero)}</b></span>` : "") + `</div>` +
-      `<pre>${esc(typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2))}</pre>`;
+      why + `<pre>${esc(typeof r.body === "string" ? r.body : JSON.stringify(r.body, null, 2))}</pre>`;
     if (ok){
       upsert({ id:r.body.id, numero:r.body.numero, tipo:r.body.tipo, estado:r.body.estado, importeTotal:r.body.importeTotal,
-               cdrCodigo:r.body.cdrCodigo, cdrDescripcion:r.body.cdrDescripcion });
+               cdrCodigo:r.body.cdrCodigo, cdrDescripcion:r.body.cdrDescripcion, emitidoEn: Date.now() });
       $("#qid").value = r.body.id;
     }
   } catch (e) {
@@ -286,14 +369,43 @@ $("#enviar").onclick = async () => {
 /* ---------- Historial ---------- */
 function renderHist(){
   const tb = $("#tHist tbody");
-  if (!hist.length){ tb.innerHTML = `<tr><td colspan="5" class="empty">Todavía no emitiste nada. Usa «Emitir» a la izquierda.</td></tr>`; return; }
+  const n = e => hist.filter(h => e(h.estado)).length;
+  $("#resumen").textContent = hist.length
+    ? `${hist.length} en la sesión · ${n(esAceptado)} aceptados · ${n(e => e === "PENDIENTE" || e === "EN_CONTINGENCIA")} pendientes · ${n(e => e === "RECHAZADO" || e === "EXCEPCION")} rechazados/excepción`
+    : "";
+  if (!hist.length){ tb.innerHTML = `<tr><td colspan="7" class="empty">Todavía no emitiste nada. Usa «Emitir» a la izquierda.</td></tr>`; return; }
   tb.innerHTML = hist.map(h => `<tr class="click" data-id="${esc(h.id)}">
     <td><b>${esc(h.numero)}</b></td><td>${chip(h.estado)}</td><td>${h.importeTotal != null ? money(h.importeTotal) : ""}</td>
     <td>${h.cdrCodigo != null ? esc(h.cdrCodigo) + " · " + esc(h.cdrDescripcion) : ""}</td>
-    <td>${h.estado === "RECHAZADO" || h.estado === "EXCEPCION" ? "—" : `<a href="/api/v1/comprobantes/${esc(h.id)}/pdf" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver PDF</a>`}</td></tr>`).join("");
+    <td>${h.emitidoEn && h.finalEn ? "~" + Math.max(1, Math.round((h.finalEn - h.emitidoEn) / 1000)) + " s" : ""}</td>
+    <td>${h.estado === "RECHAZADO" || h.estado === "EXCEPCION" ? "—" : `<a href="/api/v1/comprobantes/${esc(h.id)}/pdf" target="_blank" rel="noopener" onclick="event.stopPropagation()">Ver PDF</a>`}</td>
+    <td>${esAceptado(h.estado) ? `<button type="button" class="small" data-mail="${esc(h.id)}" data-num="${esc(h.numero)}">Enviar</button>` : "—"}</td></tr>`).join("");
+  tb.querySelectorAll("button[data-mail]").forEach(b => b.onclick = e => { e.stopPropagation(); enviarCorreo(b.dataset.mail, b.dataset.num); });
   tb.querySelectorAll("tr.click").forEach(tr => tr.onclick = () => { $("#qid").value = tr.dataset.id; consultar(); });
 }
-$("#limpiar").onclick = () => { hist = []; saveHist(); renderHist(); };
+$("#limpiar").onclick = () => { if (!hist.length || confirm("¿Vaciar la lista de esta sesión? (no borra nada del prototipo)")){ hist = []; saveHist(); renderHist(); } };
+
+const csvCell = v => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+$("#csv").onclick = () => {
+  const rows = [["numero","estado","total","cdr_codigo","cdr_descripcion","emitido","tiempo_s"]];
+  hist.forEach(h => rows.push([h.numero, h.estado, h.importeTotal, h.cdrCodigo, h.cdrDescripcion,
+    h.emitidoEn ? new Date(h.emitidoEn).toISOString() : "", h.emitidoEn && h.finalEn ? Math.round((h.finalEn - h.emitidoEn) / 1000) : ""]));
+  const blob = new Blob(["\ufeffsep=,\r\n" + rows.map(r => r.map(csvCell).join(",")).join("\r\n")], { type:"text/csv;charset=utf-8" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "sfe-sesion.csv"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+async function enviarCorreo(id, numero){
+  const to = $("#mail").value.trim(), msg = $("#mailMsg");
+  if (!/^[^\s<>",;]+@[^\s<>",;]+\.[A-Za-z]{2,}$/.test(to)){ msg.className = "err"; msg.textContent = "Escribe un solo correo válido."; return; }
+  msg.className = "empty"; msg.textContent = "Enviando correo de " + numero + "…";
+  try {
+    const r = await api("/comprobantes/" + encodeURIComponent(id) + "/correo",
+      { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ destinatario: to }) });
+    if (r.status === 200){ msg.className = "empty"; msg.innerHTML = `Correo de <b>${esc(numero)}</b> enviado a ${esc(to)} (PDF + XML). Revísalo en <a href="${MAILPIT}" target="_blank" rel="noopener">Mailpit</a>.`; }
+    else { msg.className = "err"; msg.textContent = explain(r, "correo"); }
+  } catch { msg.className = "err"; msg.textContent = "No se pudo llegar al prototipo."; }
+}
 
 async function consultar(){
   const id = $("#qid").value.trim();
@@ -339,7 +451,12 @@ async function pollHist(){
     } catch {}
   }
 }
-setInterval(() => { pollCont(); pollHist(); }, 3000);
+let busy = false;
+setInterval(async () => {
+  if (document.hidden || busy) return;
+  busy = true;
+  try { await Promise.all([pollCont(), pollHist()]); } finally { busy = false; }
+}, 3000);
 
 /* ---------- Inicio ---------- */
 $("#idv").value = newId();
